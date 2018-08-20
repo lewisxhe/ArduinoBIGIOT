@@ -29,7 +29,7 @@ int connect( ip,  port)
  * @note   登陆到贝壳
  * @retval 登陆成功返回 true, 失败false
  */
-bool login(  deviceId,   apiKey);
+bool login(  deviceId,   apiKey , usrKey);
 ```
 
 ```
