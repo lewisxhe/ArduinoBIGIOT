@@ -1,14 +1,23 @@
 #include <ESP8266WiFi.h>
-#include <ArduinoJson.h>
-#include <bigiot.h>
+#include "bigiot.h"
 
 const char *host = "www.bigiot.net";
 const int port = 8282;
 
 const char *ssid = "your wifi ssid";
-const char *password = "your wifi passwd";
-const char *privateKey = "your bigiot platfrom apikey";
-const char *deviceId = "your bigiot platfrom device id";
+const char *password = "your wifi password";
+
+char buf[100];
+
+typedef struct
+{
+  const char *name;
+  const char *key;
+  const char *id;
+  const char *usrkey;
+} bigiot_login_param_t;
+
+const bigiot_login_param_t param = {"remote device name", "your apikey", "your device id", "your usr key"};
 
 BigIOT bigiot;
 
@@ -16,7 +25,6 @@ void setup()
 {
   Serial.begin(115200);
   delay(10);
-  pinMode(LED_BUILTIN, OUTPUT);
 
   Serial.println();
   Serial.println();
@@ -41,41 +49,31 @@ void setup()
   {
     Serial.print("connecting to ");
     Serial.println(host);
+
     if (bigiot.connect(host, port))
     {
-      if (bigiot.login(deviceId, privateKey))
+      if (bigiot.login(param.id, param.key, param.usrkey))
       {
         Serial.println("login success");
         break;
       }
       Serial.println("login fail");
     }
-    delay(1000);
   }
 }
 
 void loop()
 {
-  int com = bigiot.waiting();
-  switch (com)
-  {
-    //lost connected
-  case BIGIOT_LOST_CONNECTED:
-    Serial.println("lost connected");
-    break;
-    //off
-  case BIGIOT_STOP_COMMAND:
-    Serial.println("BIGIOT_STOP_COMMAND - ");
-    digitalWrite(LED_BUILTIN, 1);
-    break;
-    //on
-  case BIGIOT_PLAY_COMMAND:
-    Serial.println("BIGIOT_PLAY_COMMAND + ");
-    digitalWrite(LED_BUILTIN, 0);
-    break;
-  default:
-    break;
-  }
+  static uint32_t timestamp = 0;
 
-  delay(500);
+  int com = bigiot.waiting();
+  
+  if (millis() - timestamp > 3000)
+  {
+    sprintf(buf, "%d", rand() % UINT16_MAX);
+    String ran = buf;
+    BIGIOT_Data_t d = {"your interface id", ran};
+    bigiot.update_data_stream(&d, 1);
+    timestamp = millis();
+  }
 }
