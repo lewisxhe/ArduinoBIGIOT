@@ -85,4 +85,10 @@ void send_alarm_message(alarm_method_t manner, String mes)
 | BIGIOT_DOWN_COMMAND   | 11| 下    | 
 | BIGIOT_FPRWARD_COMMAND| 12| 上一首| 
 
+### 5.alarm_method_t 参数说明:
+| BIGIOT_EMAIL_M | email |
+|------------|--------- |
+| BIGIOT_QQ_M | QQ |   
+| BIGIOT_WEIBO_M   | weibo | 
 
+ 
