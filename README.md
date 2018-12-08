@@ -13,7 +13,7 @@
 ### 2.使用说明
 * 打开`Arduino`->`项目`->`加载库`->`添加一个zip库`
 * 安装[ArduinoJson v5.13.2](https://github.com/bblanchon/ArduinoJson/releases/tag/v5.13.2),注意是v5版本
-* 具体使用方法参考`examples`,example是基于`esp8266`,其他硬件暂未测试
+* 具体使用方法参考`examples`,example是基于`esp8266`,`esp32`,其他硬件暂未测试
 
 ### 3.API 说明
 ```
