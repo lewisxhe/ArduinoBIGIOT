@@ -221,6 +221,8 @@ void BigIOT::update_data_stream(BIGIOT_Data_t *data, int len)
     String pack;
     if (!connected())
         return;
+    if (!len || !data)
+        return;
     jsonBuffer.clear();
     JsonObject &root = jsonBuffer.createObject();
     root["M"] = "update";
@@ -239,6 +241,8 @@ void BigIOT::update_data_stream(BIGIOT_Data_t *data, int len)
 void BigIOT::update_location_data(BIGIOT_location_t *data)
 {
     String pack;
+    if (!data)
+        return;
     if (!connected())
         return;
     jsonBuffer.clear();
