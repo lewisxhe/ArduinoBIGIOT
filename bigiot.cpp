@@ -228,7 +228,7 @@ void BigIOT::update_data_stream(BIGIOT_Data_t *data, int len)
     JsonObject &v = root.createNestedObject("V");
     for (int i = 0; i < len; ++i)
     {
-        v[data->interfaceID] = data->data;
+        v[data[i].interfaceID] = data[i].data;
     }
     root.printTo(pack);
     pack += "\n";
