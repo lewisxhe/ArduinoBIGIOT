@@ -91,4 +91,6 @@ void send_alarm_message(alarm_method_t manner, String mes)
 | BIGIOT_QQ_M | QQ |   
 | BIGIOT_WEIBO_M   | weibo | 
 
- 
+ ### 日志:
+ - 修复设置加密登陆时发送下线命令无效
+ - 修复多数据接口只发送首个数据流

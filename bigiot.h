@@ -4,6 +4,7 @@
 
 #include "WiFiClient.h"
 #include <ArduinoJson.h>
+#include <MD5Builder.h>
 
 #define BIGIOT_LOGINT_WELCOME 1
 #define BIGIOT_LOGINT_CHECK_IN 2
@@ -48,32 +49,63 @@ typedef struct
   String lo;
 } BIGIOT_location_t;
 
-class BigIOT : public WiFiClient
+typedef void (*callbackFunction)(const char *devName, const int c);
+
+class BIGIOT : public WiFiClient
 {
 public:
-  BigIOT()
+  BIGIOT(String host, uint16_t port)
   {
-    timeout = 0;
+    _host = host;
+    _port = port;
+  };
+
+  BIGIOT(const char *host, uint16_t port)
+  {
+    _host = String(host);
+    _port = port;
+  };
+
+  BIGIOT()
+  {
+    _host = "www.bigiot.net";
+    _port = 8282;
   }
-  bool login(const char *devId, const char *apiKey, const char *userKey = "");
+  void attach(callbackFunction func);
+  bool login(const char *devId, const char *apiKey, const char *userKey = "", bool reconnect = true);
   int waiting(void);
   void update_data_stream(BIGIOT_Data_t *data, int len);
   void update_location_data(BIGIOT_location_t *data);
   void send_alarm_message(alarm_method_t manner, String mes);
 
+  void updateData(int id, int data);
+  void updateData(const char *id, const char *data, int len);
+  void updateData(String id, String data);
+  void updateData(String id[], String data[]);
+
+  String getDeviceName() const { return _devName; };
+
 private:
-  int login_parse(String pack);
-  int packet_parse(String pack);
+  bool loginToBigiot(void);
+  int loginParse(String pack);
+  int packetParse(String pack);
   String get_heatrate_pack(void);
   String get_login_packet(String apiKey);
   String get_logout_packet(void);
 
 protected:
+  MD5Builder md5;
   StaticJsonBuffer<1024> jsonBuffer;
-  uint64_t timeout;
+  uint64_t _timeout = 0;
+  uint16_t _port;
+  String _host;
   String _dev;
   String _key;
   String _usrKey;
+  String _token;
+  String _devName;
+  bool _reconnect;
+  callbackFunction _callbackFunc = NULL;
 };
 
 #endif /*__BIGIOT_HPP*/
