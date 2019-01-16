@@ -157,7 +157,7 @@ void tempRead()
 {
     //Single data stream upload
     float temp = temp18B20.temp();
-    bigiot.upload(BIGIOT_TEMP_STREAM_ID, NULL);
+    bigiot.upload(BIGIOT_TEMP_STREAM_ID, String(temp));
 
     //When the temperature rises to 25 degrees Celsius, an alarm will be sent to the mailbox.
     if (temp > 25) {
