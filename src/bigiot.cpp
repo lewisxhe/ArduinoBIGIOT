@@ -611,12 +611,20 @@ bool ServerChan::sendWechat(const char *text, const char *desp)
     if (desp) {
         size = strlen(desp) > SERVERCHAN_DESP_MAX_LENGTH ? SERVERCHAN_DESP_MAX_LENGTH : size + strlen(desp);
     }
+    #if 0
     char *buff = nullptr;
     try {
         buff = new char[size]();
     } catch (std::bad_alloc) {
         return false;
     }
+    #else
+    char *buff = NULL;
+    buff = (char *)malloc(size);
+    if(!buff){
+        return false;
+    }
+    #endif
 
     snprintf(buff, size, SERVERCHAN_LINK_FORMAT, _sckey.c_str(), text);
     if (desp) {
@@ -635,7 +643,11 @@ bool ServerChan::sendWechat(const char *text, const char *desp)
     int err = http.GET();
     DEBUG_BIGIOTCIENT("[HTTP] GET.code: %d\n", err);
     http.end();
+    #if 0
     delete [] buff;
+    #else
+    free(buff);
+    #endif
     return err == HTTP_CODE_OK;
 }
 

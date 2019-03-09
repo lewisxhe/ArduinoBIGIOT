@@ -39,12 +39,11 @@
 #define PLATFORM_ARRAY_SIZE(x)                    (sizeof(x)/sizeof(x[0]))
 
 
-
 enum {
+    INVALD = -2,
     DISCONNECT = -1,
-    INVALD = 0,
+    PLAY = 0,
     STOP,
-    PLAY,
     OFFON,
     MINUS,
     UP,
