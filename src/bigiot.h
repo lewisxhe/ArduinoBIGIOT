@@ -94,7 +94,7 @@ class BIGIOT : public WiFiClient
 {
 public:
     BIGIOT();
-    typedef void (*eventCallbackFunc)(const int id, const int c, const char *command);
+    typedef void (*eventCallbackFunc)(const int id, const int c, const char *command, const char *salve);
     typedef void (*generlCallbackFunc)(BIGIOT &);
 
     void connectAttack(generlCallbackFunc f),

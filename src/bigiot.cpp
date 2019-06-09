@@ -90,18 +90,20 @@ int BIGIOT::packetParse(String pack)
         return 0;
     }
     const char *m = (const char *)root["M"];
+    const char *salve = (const char *)root["S"];
     if (!strcmp(m, "say")) {
         const char *s = (const char *)root["C"];
         for (int i = 0; i < PLATFORM_ARRAY_SIZE(platform_command); ++i) {
             if (!strcmp(s, platform_command[i])) {
                 if (_eventCallback) {
-                    _eventCallback(_dev.toInt(), i, platform_command[i]);
+                    _eventCallback(_dev.toInt(), i, platform_command[i], salve);
                 }
                 return i + 1;
             }
         }
+        // const char *salve = (const char *)root["S"];
         if (_eventCallback) {
-            _eventCallback(_dev.toInt(), CUSTOM, s);
+            _eventCallback(_dev.toInt(), CUSTOM, s, salve);
         }
     } else if (!strcmp(m, "checkout")) {
         const char *r = (const char *)root["IP"];
@@ -611,20 +613,20 @@ bool ServerChan::sendWechat(const char *text, const char *desp)
     if (desp) {
         size = strlen(desp) > SERVERCHAN_DESP_MAX_LENGTH ? SERVERCHAN_DESP_MAX_LENGTH : size + strlen(desp);
     }
-    #if 0
+#if 0
     char *buff = nullptr;
     try {
         buff = new char[size]();
     } catch (std::bad_alloc) {
         return false;
     }
-    #else
+#else
     char *buff = NULL;
     buff = (char *)malloc(size);
-    if(!buff){
+    if (!buff) {
         return false;
     }
-    #endif
+#endif
 
     snprintf(buff, size, SERVERCHAN_LINK_FORMAT, _sckey.c_str(), text);
     if (desp) {
@@ -643,11 +645,11 @@ bool ServerChan::sendWechat(const char *text, const char *desp)
     int err = http.GET();
     DEBUG_BIGIOTCIENT("[HTTP] GET.code: %d\n", err);
     http.end();
-    #if 0
+#if 0
     delete [] buff;
-    #else
+#else
     free(buff);
-    #endif
+#endif
     return err == HTTP_CODE_OK;
 }
 
