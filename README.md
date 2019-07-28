@@ -5,8 +5,13 @@
  详情见[贝壳物联平台](https://www.bigiot.net)
 
 
-
 ## 更新概要
+***
+[v1.1]
+* 更新ArdunJson6.11.3支持，同时保持5.13.2的支持
+* 在ArdunJson6.11.3下,在贝壳中，设备名称不能使用中文，下发命令不能包含中文字符，6.11.3版本不支持中文字符串，会返回解析失败,在老版本 5.13.2中可以使用中文字符串
+* 添加二级Json 在事件回调函数中返回，可以再次解析天猫返回的设备Json字符串
+
 ***
 [v1.0]
 * 更新调用接口,更加容易使用和理解
@@ -33,5 +38,6 @@
 
 ## 依赖:
 ***
-* [ArduinoJson v5.13.2](https://github.com/bblanchon/ArduinoJson/releases/tag/v5.13.2) **注意是v5版本**
-
+* 可以使用这两个版本的Jsonlibrary ,其他的版本未测试
+* [ArduinoJson v5.13.2](https://github.com/bblanchon/ArduinoJson/releases/tag/v5.13.2) 
+* [ArduinoJson v6.11.3](https://github.com/bblanchon/ArduinoJson/tree/v6.11.3)

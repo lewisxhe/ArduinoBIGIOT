@@ -18,7 +18,16 @@
 #include <MD5Builder.h>
 #include <ArduinoJson.h>
 
+#define ARDUINOJSON_V5132   ((ARDUINOJSON_VERSION_MAJOR) == 5 && (ARDUINOJSON_VERSION_MINOR) == 13 && (ARDUINOJSON_VERSION_REVISION) == 2)
+#define ARDUINOJSON_V6113   ((ARDUINOJSON_VERSION_MAJOR) == 6 && (ARDUINOJSON_VERSION_MINOR) == 11 && (ARDUINOJSON_VERSION_REVISION) == 3)
+
+#if ARDUINOJSON_V6113
+StaticJsonDocument<1024> root;
+#elif ARDUINOJSON_V5132
 StaticJsonBuffer<1024> jsonBuffer;
+#else
+#error "No support Arduinojson version ,please use ArduinoJsonV6.11.3 or ArduinoJsonV5.13.2"
+#endif
 
 /////////////////////////////////////////////////////////////////
 BIGIOT::BIGIOT()
@@ -84,11 +93,23 @@ int BIGIOT::handle(void)
 int BIGIOT::packetParse(String pack)
 {
     DEBUG_BIGIOTCIENT("%s", pack.c_str());
+
+#if ARDUINOJSON_V6113
+    root.clear();
+    DeserializationError error = deserializeJson(root, pack);
+    if (error) {
+        DEBUG_BIGIOTCIENT("[%d] DeserializationError code:%d \n", __LINE__, error);
+        Serial.println(pack);
+        return 0;
+    }
+#elif ARDUINOJSON_V5132
     jsonBuffer.clear();
     JsonObject &root = jsonBuffer.parseObject(pack);
     if (!root.success()) {
         return 0;
     }
+#endif
+
     const char *m = (const char *)root["M"];
     const char *salve = (const char *)root["S"];
     if (!strcmp(m, "say")) {
@@ -115,9 +136,20 @@ int BIGIOT::packetParse(String pack)
 /////////////////////////////////////////////////////////////////
 int BIGIOT::loginParse(String pack)
 {
+
+#if ARDUINOJSON_V6113
+    root.clear();
+    DeserializationError error = deserializeJson(root, pack);
+    if (error) {
+        DEBUG_BIGIOTCIENT("[%d] DeserializationError code:%d \n", __LINE__, error);
+        return INVALD;
+    }
+#elif ARDUINOJSON_V5132
     JsonObject &root = jsonBuffer.parseObject(pack);
     if (!root.success())
         return INVALD;
+#endif
+
     const char *m = (const char *)root["M"];
     if (!strcmp(m, "WELCOME TO BIGIOT")) {
         return BIGIOT_LOGINT_WELCOME;
@@ -212,12 +244,21 @@ void BIGIOT::connectAttack(generlCallbackFunc f)
 String BIGIOT::getLoginPacket(String apiKey)
 {
     String pack;
+#if ARDUINOJSON_V6113
+    root.clear();
+#elif ARDUINOJSON_V5132
     jsonBuffer.clear();
-    JsonObject &root = jsonBuffer.createObject();
+    JsonObject root = jsonBuffer.createObject();
+#endif
     root["M"] = "checkin";
     root["ID"] = _dev;
     root["K"] = apiKey;
+
+#if ARDUINOJSON_V6113
+    serializeJson(root, pack);
+#elif ARDUINOJSON_V5132
     root.printTo(pack);
+#endif
     pack += "\n";
     DEBUG_BIGIOTCIENT("SEND LOGIN COMMAND:%s", pack.c_str());
     return pack;
@@ -227,15 +268,25 @@ String BIGIOT::getLoginPacket(String apiKey)
 String BIGIOT::getLogoutPacket(void)
 {
     String pack;
+
+#if ARDUINOJSON_V6113
+#elif ARDUINOJSON_V5132
     jsonBuffer.clear();
-    JsonObject &root = jsonBuffer.createObject();
+    JsonObject root = jsonBuffer.createObject();
+#endif
+
+    root.clear();
     root["M"] = "checkout";
     root["ID"] = _dev;
     if (_token.length())
         root["K"] = _token;
     else
         root["K"] = _key;
+#if ARDUINOJSON_V6113
+    serializeJson(root, pack);
+#elif ARDUINOJSON_V5132
     root.printTo(pack);
+#endif
     pack   += "\n";
     DEBUG_BIGIOTCIENT("SEND CHECKOUT COMMAND:%s", pack.c_str());
     return pack;
@@ -260,13 +311,25 @@ bool BIGIOT::sendAlarm(const char *method, const char *message)
     if (!strcmp(method, "email") ||
             !strcmp(method, "qq") ||
             !strcmp(method, "weibo")) {
+#if ARDUINOJSON_V6113
+        root.clear();
+#elif ARDUINOJSON_V5132
         jsonBuffer.clear();
-        JsonObject &root = jsonBuffer.createObject();
+        JsonObject root = jsonBuffer.createObject();
+#endif
+
+
+
         root["M"] = "alert";
         root["C"] = message;
         root["B"] = method;
         String json;
+
+#if ARDUINOJSON_V6113
+        serializeJson(root, json);
+#elif ARDUINOJSON_V5132
         root.printTo(json);
+#endif
         json += "\n";
         print(json);
         DEBUG_BIGIOTCIENT("Send:%s", json);
@@ -373,12 +436,23 @@ bool BIGIOT::uploadPhoto( const char *id, const char *type, const char *filename
         return false;
     }
     char *start = strchr(str, '{');
+
+#if ARDUINOJSON_V6113
+    root.clear();
+    DeserializationError error = deserializeJson(root, start);
+    if (error) {
+        free(str);
+        return false;
+    }
+#elif ARDUINOJSON_V5132
     jsonBuffer.clear();
     JsonObject &root = jsonBuffer.parseObject(start);
     if (!root.success()) {
         free(str);
         return false;
     }
+#endif
+
     bool retVal = !strcmp((const char *)root["R"], "0") ? false : true;
     free(str);
     return retVal;
@@ -400,16 +474,32 @@ bool BIGIOT::upload(const char *id, const char *data)
 bool BIGIOT::upload(const char *id[], const char *data[], int len)
 {
     if (!_isLogin || !data || !len)return false;
+
+#if ARDUINOJSON_V6113
+    root.clear();
+#elif ARDUINOJSON_V5132
     jsonBuffer.clear();
-    JsonObject &root = jsonBuffer.createObject();
+    JsonObject root = jsonBuffer.createObject();
+#endif
+
     root["M"] = "update";
     root["ID"] = _dev;
+
+#if ARDUINOJSON_V6113
+    JsonObject v = root.createNestedObject("V");
+#elif ARDUINOJSON_V5132
     JsonObject &v = root.createNestedObject("V");
+#endif
     for (int i = 0; i < len; ++i) {
         v[id[i]] = data[i];
     }
     String json;
+
+#if ARDUINOJSON_V6113
+    serializeJson(root, json);
+#elif ARDUINOJSON_V5132
     root.printTo(json);
+#endif
     json += "\n";
     print(json);
     DEBUG_BIGIOTCIENT("Send:%s", json);
@@ -437,15 +527,31 @@ bool BIGIOT::loaction(const char *id, const char *longitude, const char *latitud
 {
     char buff[128];
     if (!_isLogin)return false;
+
+#if ARDUINOJSON_V6113
+    root.clear();
+#elif ARDUINOJSON_V5132
     jsonBuffer.clear();
-    JsonObject &root = jsonBuffer.createObject();
+    JsonObject root = jsonBuffer.createObject();
+#endif
     root["M"] = "update";
     root["ID"] = _dev;
+
+#if ARDUINOJSON_V6113
+    JsonObject v = root.createNestedObject("V");
+#elif ARDUINOJSON_V5132
     JsonObject &v = root.createNestedObject("V");
+#endif
+
     snprintf(buff, sizeof(buff), "%s,%s", longitude, latitude);
     v[id] = buff;
     String json;
+
+#if ARDUINOJSON_V6113
+    serializeJson(root, json);
+#elif ARDUINOJSON_V5132
     root.printTo(json);
+#endif
     json += "\n";
     print(json);
     DEBUG_BIGIOTCIENT("Send:%s", json);
@@ -613,20 +719,11 @@ bool ServerChan::sendWechat(const char *text, const char *desp)
     if (desp) {
         size = strlen(desp) > SERVERCHAN_DESP_MAX_LENGTH ? SERVERCHAN_DESP_MAX_LENGTH : size + strlen(desp);
     }
-#if 0
-    char *buff = nullptr;
-    try {
-        buff = new char[size]();
-    } catch (std::bad_alloc) {
-        return false;
-    }
-#else
     char *buff = NULL;
     buff = (char *)malloc(size);
     if (!buff) {
         return false;
     }
-#endif
 
     snprintf(buff, size, SERVERCHAN_LINK_FORMAT, _sckey.c_str(), text);
     if (desp) {
@@ -645,11 +742,7 @@ bool ServerChan::sendWechat(const char *text, const char *desp)
     int err = http.GET();
     DEBUG_BIGIOTCIENT("[HTTP] GET.code: %d\n", err);
     http.end();
-#if 0
-    delete [] buff;
-#else
     free(buff);
-#endif
     return err == HTTP_CODE_OK;
 }
 

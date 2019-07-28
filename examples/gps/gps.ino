@@ -28,7 +28,7 @@ const char *usrkey = "your user key";           //platform user key , if you are
 
 BIGIOT bigiot;
 
-void eventCallback(const int devid, const int comid, const char *comstr)
+void eventCallback(const int devid, const int comid, const char *comstr, const char *slave)
 {
     // You can handle the commands issued by the platform here.
     Serial.printf(" device id:%d ,command id:%d command string:%s\n", devid, comid, comstr);

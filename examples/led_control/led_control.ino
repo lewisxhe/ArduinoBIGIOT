@@ -25,7 +25,7 @@ BIGIOT bigiot;
 //中文 关灯 Uincode码
 #define TURN_OFF    "u5173u706f"
 
-void eventCallback(const int devid, const int comid, const char *comstr)
+void eventCallback(const int devid, const int comid, const char *comstr, const char *slave)
 {
     // You can handle the commands issued by the platform here.
     Serial.printf("Received[%d] - [%d]:%s \n", devid, comid, comstr);
