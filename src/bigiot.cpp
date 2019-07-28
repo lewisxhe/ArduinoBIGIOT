@@ -248,7 +248,7 @@ String BIGIOT::getLoginPacket(String apiKey)
     root.clear();
 #elif ARDUINOJSON_V5132
     jsonBuffer.clear();
-    JsonObject root = jsonBuffer.createObject();
+    JsonObject &root = jsonBuffer.createObject();
 #endif
     root["M"] = "checkin";
     root["ID"] = _dev;
@@ -272,7 +272,7 @@ String BIGIOT::getLogoutPacket(void)
 #if ARDUINOJSON_V6113
 #elif ARDUINOJSON_V5132
     jsonBuffer.clear();
-    JsonObject root = jsonBuffer.createObject();
+    JsonObject &root = jsonBuffer.createObject();
 #endif
 
     root.clear();
@@ -315,7 +315,7 @@ bool BIGIOT::sendAlarm(const char *method, const char *message)
         root.clear();
 #elif ARDUINOJSON_V5132
         jsonBuffer.clear();
-        JsonObject root = jsonBuffer.createObject();
+        JsonObject &root = jsonBuffer.createObject();
 #endif
 
 
@@ -479,7 +479,7 @@ bool BIGIOT::upload(const char *id[], const char *data[], int len)
     root.clear();
 #elif ARDUINOJSON_V5132
     jsonBuffer.clear();
-    JsonObject root = jsonBuffer.createObject();
+    JsonObject &root = jsonBuffer.createObject();
 #endif
 
     root["M"] = "update";
@@ -532,7 +532,7 @@ bool BIGIOT::loaction(const char *id, const char *longitude, const char *latitud
     root.clear();
 #elif ARDUINOJSON_V5132
     jsonBuffer.clear();
-    JsonObject root = jsonBuffer.createObject();
+    JsonObject &root = jsonBuffer.createObject();
 #endif
     root["M"] = "update";
     root["ID"] = _dev;
