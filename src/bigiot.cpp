@@ -58,6 +58,7 @@ bool BIGIOT::isOnline()
 {
     return _isLogin;
 }
+
 /////////////////////////////////////////////////////////////////
 int BIGIOT::handle(void)
 {
@@ -99,7 +100,7 @@ int BIGIOT::packetParse(String pack)
     DeserializationError error = deserializeJson(root, pack);
     if (error) {
         DEBUG_BIGIOTCIENT("[%d] DeserializationError code:%d \n", __LINE__, error);
-        Serial.println(pack);
+        // Serial.println(pack);
         return 0;
     }
 #elif ARDUINOJSON_V5132
@@ -241,6 +242,83 @@ void BIGIOT::connectAttack(generlCallbackFunc f)
 }
 
 /////////////////////////////////////////////////////////////////
+
+bool BIGIOT::checkOnline()
+{
+    static uint64_t checkTimeStamp = 0;
+
+    if (millis() - checkTimeStamp < 15 * 1000) {
+        return true;
+    }
+    checkTimeStamp = millis();
+
+    String pack;
+#if ARDUINOJSON_V6113
+    root.clear();
+#elif ARDUINOJSON_V5132
+    jsonBuffer.clear();
+    JsonObject &root = jsonBuffer.createObject();
+#endif
+    root["M"] = "isOL";
+#if ARDUINOJSON_V6113
+    JsonObject v = root.createNestedArray("ID");
+#elif ARDUINOJSON_V5132
+    JsonArray &v = root.createNestedArray("ID");
+#endif
+    v.add("D" + _dev);
+    root["ID"] = v;
+
+#if ARDUINOJSON_V6113
+    serializeJson(root, pack);
+#elif ARDUINOJSON_V5132
+    root.printTo(pack);
+#endif
+    pack += "\n";
+    DEBUG_BIGIOTCIENT("SEND CHECK ONLINE COMMAND:%s", pack.c_str());
+
+    print(pack);
+
+    uint64_t start = millis();
+
+    while (1) {
+        if (connected() && _isLogin) {
+            while (WiFiClient::available()) {
+                pack = readStringUntil('\n');
+                // Serial.println(pack);
+#if ARDUINOJSON_V6113
+                root.clear();
+                DeserializationError error = deserializeJson(root, pack);
+                if (error) {
+                    DEBUG_BIGIOTCIENT("[%d] DeserializationError code:%d \n", __LINE__, error);
+                    return false;
+                }
+#elif ARDUINOJSON_V5132
+                JsonObject &root = jsonBuffer.parseObject(pack);
+                if (!root.success())
+                    return false;
+#endif
+                String id = "D" + _dev;
+                if (root["R"][id] == String("1")) {
+                    DEBUG_BIGIOTCIENT("is Online ...");
+                    return true;
+                }
+                DEBUG_BIGIOTCIENT("is No Online ...")；
+                stop();
+                _isLogin = false;
+                return false;
+            }
+            if (millis() - start > 5000) {
+                DEBUG_BIGIOTCIENT("[Timeout] is No Online ...\n");
+                stop();
+                _isLogin = false;
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+/////////////////////////////////////////////////////////////////
 String BIGIOT::getLoginPacket(String apiKey)
 {
     String pack;
@@ -270,12 +348,12 @@ String BIGIOT::getLogoutPacket(void)
     String pack;
 
 #if ARDUINOJSON_V6113
+    root.clear();
 #elif ARDUINOJSON_V5132
     jsonBuffer.clear();
     JsonObject &root = jsonBuffer.createObject();
 #endif
 
-    root.clear();
     root["M"] = "checkout";
     root["ID"] = _dev;
     if (_token.length())
@@ -662,7 +740,7 @@ bool xEamil::emailRecv()
         }
     }
     code = peek();
-    Serial.print("MailRecv:");
+    // Serial.print("MailRecv:");
     while (available()) {
         DEBUG_BIGIOT_WRITE(read());
     }

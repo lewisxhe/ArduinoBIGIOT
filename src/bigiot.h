@@ -123,7 +123,8 @@ public:
     const char *deviceName();
     String deviceName() const;
     void setHeartFreq(uint32_t f);
-
+    bool checkOnline();
+    
 private:
     bool loginToBigiot();
 
