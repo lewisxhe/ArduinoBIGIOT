@@ -261,12 +261,12 @@ bool BIGIOT::checkOnline()
 #endif
     root["M"] = "isOL";
 #if ARDUINOJSON_V6113
-    JsonObject v = root.createNestedArray("ID");
+    JsonArray v = root.createNestedArray("ID");
 #elif ARDUINOJSON_V5132
     JsonArray &v = root.createNestedArray("ID");
 #endif
+
     v.add("D" + _dev);
-    root["ID"] = v;
 
 #if ARDUINOJSON_V6113
     serializeJson(root, pack);
@@ -302,13 +302,16 @@ bool BIGIOT::checkOnline()
                     DEBUG_BIGIOTCIENT("is Online ...");
                     return true;
                 }
-                DEBUG_BIGIOTCIENT("is No Online ...")；
+                DEBUG_BIGIOTCIENT("is No Online ...");
                 stop();
                 _isLogin = false;
                 return false;
             }
             if (millis() - start > 5000) {
                 DEBUG_BIGIOTCIENT("[Timeout] is No Online ...\n");
+                if (connected()) {
+                    Serial.println("Cilent is connect ...\n");
+                }
                 stop();
                 _isLogin = false;
                 return false;
