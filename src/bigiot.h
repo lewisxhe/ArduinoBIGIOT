@@ -5,7 +5,7 @@
   Created by Lewis he on January 1, 2019.
 */
 /////////////////////////////////////////////////////////////////
-#pragma onec
+#pragma once
 
 #include "WiFiClient.h"
 

@@ -127,10 +127,11 @@ int BIGIOT::packetParse(String pack)
         if (_eventCallback) {
             _eventCallback(_dev.toInt(), CUSTOM, s, salve);
         }
-    } else if (!strcmp(m, "checkout")) {
+    } 
+    /*else if (!strcmp(m, "checkout")) {
         const char *r = (const char *)root["IP"];
         DEBUG_BIGIOTCIENT("RECV CHECKOUT:%s\n", r);
-    }
+    }*/
     return 0;
 }
 
@@ -790,7 +791,7 @@ void ServerChan::setSCKEY(const char *key)
 /////////////////////////////////////////////////////////////////
 bool ServerChan::sendWechat(String text, String desp)
 {
-    sendWechat(text.c_str(), desp.c_str());
+    return sendWechat(text.c_str(), desp.c_str());
 }
 
 /////////////////////////////////////////////////////////////////
