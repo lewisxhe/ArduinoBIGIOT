@@ -1,4 +1,4 @@
-# BIGIOT Platform librarie
+# BIGIOT Platform Library
 
 ## 简介:
 
@@ -45,4 +45,4 @@
 
 
 ## CHANGE LOG:
-    2/1/2020: 修复下8266下的警告.  2019-nCov  中国加油,武汉加油 . 
+    2/1/2020: 修复下8266下的警告.  2019-nCov  中国加油,武汉加油 . 
