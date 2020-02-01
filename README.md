@@ -41,3 +41,8 @@
 * 可以使用这两个版本的Jsonlibrary ,其他的版本未测试
 * [ArduinoJson v5.13.2](https://github.com/bblanchon/ArduinoJson/releases/tag/v5.13.2) 
 * [ArduinoJson v6.11.3](https://github.com/bblanchon/ArduinoJson/tree/v6.11.3)
+
+
+
+## CHANGE LOG:
+    2/1/2020: 修复下8266下的警告.  2019-nCov  中国加油,武汉加油 . 

@@ -7,11 +7,11 @@
 
 #include "bigiot.h"
 #include <base64.h>
-#if defined ESP32
+#if defined(ESP32)
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
-#elif defined ESP8266
+#elif defined(ESP8266)
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #endif
@@ -127,7 +127,7 @@ int BIGIOT::packetParse(String pack)
         if (_eventCallback) {
             _eventCallback(_dev.toInt(), CUSTOM, s, salve);
         }
-    } 
+    }
     /*else if (!strcmp(m, "checkout")) {
         const char *r = (const char *)root["IP"];
         DEBUG_BIGIOTCIENT("RECV CHECKOUT:%s\n", r);
@@ -820,7 +820,12 @@ bool ServerChan::sendWechat(const char *text, const char *desp)
     DEBUG_BIGIOTCIENT("ServerChan Request:%s", buff);
 
     HTTPClient http;
-    http.begin(buff);//esp8266 deprecated this method
+#if defined(ESP32)
+    http.begin(buff);
+#elif defined(ESP8266)
+    WiFiClient client;
+    http.begin(client, String(buff));
+#endif
     int err = http.GET();
     DEBUG_BIGIOTCIENT("[HTTP] GET.code: %d\n", err);
     http.end();
