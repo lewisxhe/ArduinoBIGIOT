@@ -7,6 +7,7 @@
 /////////////////////////////////////////////////////////////////
 #pragma once
 
+#include "Client.h"
 #include "WiFiClient.h"
 
 #ifdef DEBUG_BIGIOT_PORT
@@ -61,6 +62,7 @@ enum {
 class xEamil : public WiFiClient
 {
 public:
+    // xEamil(Client &client);
     void setEmailHost(const char *host, uint16_t port);
     bool setSender(const char *user, const char *password);
     void setRecipient(const char *email);
@@ -71,6 +73,7 @@ private:
     void emailFail();
 
 protected:
+    Client *_client;
     uint16_t _emailPort;
     String _emailHost, _emailUser, _emailPasswd, _recipient, _base64User, _base64Pass;
 };
@@ -90,10 +93,10 @@ private:
     String _sckey;
 };
 
-class BIGIOT : public WiFiClient
+class BIGIOT
 {
 public:
-    BIGIOT();
+    BIGIOT(Client &client);
     typedef void (*eventCallbackFunc)(const int id, const int c, const char *command, const char *salve);
     typedef void (*generlCallbackFunc)(BIGIOT &);
 
@@ -124,7 +127,7 @@ public:
     String deviceName() const;
     void setHeartFreq(uint32_t f);
     bool checkOnline();
-    
+
 private:
     bool loginToBigiot();
 
@@ -145,7 +148,7 @@ protected:
            _usrKey,
            _token,
            _devName;
-
+    Client *_client;
     bool _reconnect, _isLogin, _isCall;
     eventCallbackFunc _eventCallback = NULL;
     generlCallbackFunc _disconnectCallback = NULL;

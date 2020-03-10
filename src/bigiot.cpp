@@ -9,8 +9,8 @@
 #include <base64.h>
 #if defined(ESP32)
 #include <WiFi.h>
-#include <WiFiClientSecure.h>
 #include <HTTPClient.h>
+// #include <WiFiClientSecure.h>
 #elif defined(ESP8266)
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
@@ -19,19 +19,20 @@
 #include <ArduinoJson.h>
 
 #define ARDUINOJSON_V5132   ((ARDUINOJSON_VERSION_MAJOR) == 5 && (ARDUINOJSON_VERSION_MINOR) == 13 && (ARDUINOJSON_VERSION_REVISION) == 2)
-#define ARDUINOJSON_V6113   ((ARDUINOJSON_VERSION_MAJOR) == 6 && (ARDUINOJSON_VERSION_MINOR) == 11 && (ARDUINOJSON_VERSION_REVISION) == 3)
+#define ARDUINOJSON_V6113   ((ARDUINOJSON_VERSION_MAJOR) == 6 && (ARDUINOJSON_VERSION_MINOR) == 14 && (ARDUINOJSON_VERSION_REVISION) == 1)
 
 #if ARDUINOJSON_V6113
 StaticJsonDocument<1024> root;
 #elif ARDUINOJSON_V5132
 StaticJsonBuffer<1024> jsonBuffer;
 #else
-#error "No support Arduinojson version ,please use ArduinoJsonV6.11.3 or ArduinoJsonV5.13.2"
+#error "No support Arduinojson version ,please use ArduinoJsonV6.14.1 or ArduinoJsonV5.13.2"
 #endif
 
 /////////////////////////////////////////////////////////////////
-BIGIOT::BIGIOT()
+BIGIOT::BIGIOT(Client &client)
 {
+    _client = &client;
     _host = BIGIOT_PLATFORM_HOST;
     _port = BIGIOT_PLATFORM_PORT;
 }
@@ -66,13 +67,13 @@ int BIGIOT::handle(void)
     static uint64_t hearTimeStamp = millis();
     static uint64_t reconnectTimeStamp = 0;
 
-    if (connected() && _isLogin) {
-        if (WiFiClient::available()) {
-            String pack = readStringUntil('\n');
+    if (_client->connected() && _isLogin) {
+        if (_client->available()) {
+            String pack = _client->readStringUntil('\n');
             com = packetParse(pack);
         }
         if (millis() - hearTimeStamp > _heartFreq) {
-            print(BIGIOT_PLATFORM_8282_HATERATE_PACK);
+            _client->print(BIGIOT_PLATFORM_8282_HATERATE_PACK);
             hearTimeStamp = millis();
         }
     } else {
@@ -166,7 +167,7 @@ int BIGIOT::loginParse(String pack)
         md5.add(String((const char *)root["K"]) + _usrKey);
         md5.calculate();
         _token = md5.toString();
-        print(getLoginPacket(_token));
+        _client->print(getLoginPacket(_token));
         return BIGIOT_LOGINT_TOKEN;
     }
     return INVALD;
@@ -175,21 +176,21 @@ int BIGIOT::loginParse(String pack)
 /////////////////////////////////////////////////////////////////
 bool BIGIOT::loginToBigiot(void)
 {
-    if (!connect(_host.c_str(), _port)) {
+    if (!_client->connect(_host.c_str(), _port)) {
         DEBUG_BIGIOTCIENT("CONNECT HOST FAIL\n");
         return false;
     }
-    print(getLoginPacket(_key));
+    _client->print(getLoginPacket(_key));
     uint64_t timeStamp = millis();
     for (;;) {
         if (millis() - timeStamp > 5000) {
             DEBUG_BIGIOTCIENT("LOGIN_TIMEOUT\n");
-            print(getLogoutPacket());
-            stop();
+            _client->print(getLogoutPacket());
+            _client->stop();
             return false;
         }
-        if (WiFiClient::available()) {
-            String line = readStringUntil('\n');
+        if (_client->available()) {
+            String line = _client->readStringUntil('\n');
             DEBUG_BIGIOTCIENT("RECV:%s\n", line.c_str());
             if (loginParse(line) == BIGIOT_LOGINT_CHECK_IN) {
                 _isLogin = true;
@@ -277,14 +278,14 @@ bool BIGIOT::checkOnline()
     pack += "\n";
     DEBUG_BIGIOTCIENT("SEND CHECK ONLINE COMMAND:%s", pack.c_str());
 
-    print(pack);
+    _client->print(pack);
 
     uint64_t start = millis();
 
     while (1) {
-        if (connected() && _isLogin) {
-            while (WiFiClient::available()) {
-                pack = readStringUntil('\n');
+        if (_client->connected() && _isLogin) {
+            while (_client->available()) {
+                pack = _client->readStringUntil('\n');
                 // Serial.println(pack);
 #if ARDUINOJSON_V6113
                 root.clear();
@@ -304,16 +305,16 @@ bool BIGIOT::checkOnline()
                     return true;
                 }
                 DEBUG_BIGIOTCIENT("is No Online ...");
-                stop();
+                _client->stop();
                 _isLogin = false;
                 return false;
             }
             if (millis() - start > 5000) {
                 DEBUG_BIGIOTCIENT("[Timeout] is No Online ...\n");
-                if (connected()) {
+                if (_client->connected()) {
                     Serial.println("Cilent is connect ...\n");
                 }
-                stop();
+                _client->stop();
                 _isLogin = false;
                 return false;
             }
@@ -413,7 +414,7 @@ bool BIGIOT::sendAlarm(const char *method, const char *message)
         root.printTo(json);
 #endif
         json += "\n";
-        print(json);
+        _client->print(json);
         DEBUG_BIGIOTCIENT("Send:%s", json);
         last_send_time = millis();
         return true;
@@ -583,7 +584,7 @@ bool BIGIOT::upload(const char *id[], const char *data[], int len)
     root.printTo(json);
 #endif
     json += "\n";
-    print(json);
+    _client->print(json);
     DEBUG_BIGIOTCIENT("Send:%s", json);
     return true;
 }
@@ -635,10 +636,16 @@ bool BIGIOT::loaction(const char *id, const char *longitude, const char *latitud
     root.printTo(json);
 #endif
     json += "\n";
-    print(json);
+    _client->print(json);
     DEBUG_BIGIOTCIENT("Send:%s", json);
     return true;
 }
+
+/////////////////////////////////////////////////////////////////
+// xEamil::xEamil(Client &client)
+// {
+//     _client = &client;
+// }
 
 /////////////////////////////////////////////////////////////////
 void xEamil::setEmailHost(const char *host, uint16_t port)

@@ -1,7 +1,7 @@
 {
     "name": "ArduinoBIGIOT",
     "description": "Easy connection to BIGIOT IoT platform, integrated WeChat, mail function",
-    "keywords": "ESP32, IOT ,ESP8266 ,BIGIOT,Control",
+    "keywords": "ESP32,ESP8266,GSM,BIGIOT,IOT",
     "authors": [
         {
             "name": "Lewis He",
@@ -20,5 +20,5 @@
         "ArduinoJson": "5.13.2"
     },
     "frameworks": "Arduino",
-    "platforms": "espressif8266, espressif32"
+    "platforms": "*"
 }

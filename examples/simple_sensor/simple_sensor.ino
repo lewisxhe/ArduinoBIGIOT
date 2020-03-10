@@ -112,7 +112,8 @@ private:
 };
 
 
-BIGIOT bigiot;
+WiFiClient client;
+BIGIOT bigiot(client);
 DS18B20 temp18B20(DS18B20_PIN);
 
 void eventCallback(const int devid, const int comid, const char *comstr, const char *slave)

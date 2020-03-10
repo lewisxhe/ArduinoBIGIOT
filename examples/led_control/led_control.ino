@@ -18,7 +18,8 @@ const char *usrkey = "your user key";           //platform user key , if you are
 
 #define LED_PIN 16                              // led pin
 
-BIGIOT bigiot;
+WiFiClient client;
+BIGIOT bigiot(client);
 
 //中文 开灯 Uincode码
 #define TURN_ON     "u5f00u706f"

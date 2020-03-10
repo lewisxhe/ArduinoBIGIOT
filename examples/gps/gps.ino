@@ -26,7 +26,8 @@ const char *usrkey = "your user key";           //platform user key , if you are
 #define BIGIOT_LOACTION_STREAM_ID   "stream data id"     //Positioning data interface id
 #define STREAM_UPLOAD_TIMEOUT       10000               //Data update interval
 
-BIGIOT bigiot;
+WiFiClient client;
+BIGIOT bigiot(client);
 
 void eventCallback(const int devid, const int comid, const char *comstr, const char *slave)
 {

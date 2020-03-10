@@ -18,7 +18,8 @@
 #define DHTTYPE DHT11       // DHT 22  (AM2302), AM2321
 #define DHT_SENSOR_PIN 22
 
-BIGIOT bigiot;
+WiFiClient client;
+BIGIOT bigiot(client);
 DHT dht(DHT_SENSOR_PIN, DHTTYPE);
 
 const char *ssid = "your wifi ssid";
