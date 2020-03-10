@@ -3,6 +3,7 @@
   bigiot.cpp - Arduino library simplifies the use of connected BIGIOT platforms.
   Created by Lewis he on January 1, 2019.
 */
+//03,10,2020 : Update WiFiClient to Cline , Adapt to all platforms
 /////////////////////////////////////////////////////////////////
 
 #include "bigiot.h"
