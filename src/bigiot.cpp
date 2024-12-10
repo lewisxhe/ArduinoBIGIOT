@@ -31,6 +31,14 @@ StaticJsonBuffer<1024> jsonBuffer;
 #endif
 
 /////////////////////////////////////////////////////////////////
+BIGIOT::BIGIOT(Client &client,String url,uint16_t port)
+{
+    _client = &client;
+    _host = url;
+    _port = port;
+}
+
+/////////////////////////////////////////////////////////////////
 BIGIOT::BIGIOT(Client &client)
 {
     _client = &client;

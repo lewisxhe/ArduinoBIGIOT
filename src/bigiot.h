@@ -96,6 +96,7 @@ private:
 class BIGIOT
 {
 public:
+    BIGIOT(Client &client,String url,uint16_t port);
     BIGIOT(Client &client);
     typedef void (*EventCallbackFunc)(const int id, const int c, const char *command, const char *salve);
     typedef void (*GeneralCallbackFunc)(BIGIOT &);
