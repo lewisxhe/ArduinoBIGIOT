@@ -130,7 +130,7 @@ void disconnectCallback(BIGIOT &obj)
     String title = "来自 " + String(obj.deviceName()) + " 发来的消息";
 
     //When the device is disconnected, you can choose to send the message to the specified mailbox.
-    xEamil mail;
+    xEmail mail;
     mail.setEmailHost(EMAIL_SMPT_SERVER_HOST, EMAIL_SMPT_SERVER_PORT);
     mail.setSender(EMAIL_SENDER_ACCOUNT, EMAIL_SENDER_PASSWORD);
     mail.setRecipient(EMAIL_RECIPIENT);
@@ -186,13 +186,13 @@ void setup()
         while (1);
     }
 
-    //Regist platform command event hander
+    //Register platform command event handler
     bigiot.eventAttach(eventCallback);
 
-    //Regist device disconnect hander
+    //Register device disconnect handler
     bigiot.disconnectAttack(disconnectCallback);
 
-    //Regist device connect hander
+    //Register device connect handler
     bigiot.connectAttack(connectCallback);
 
     // Login to bigiot.net

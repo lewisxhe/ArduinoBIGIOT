@@ -54,13 +54,13 @@ void setup()
         while (1);
     }
 
-    //Regist platform command event hander
+    //Register platform command event handler
     bigiot.eventAttach(eventCallback);
 
-    //Regist device disconnect hander
+    //Register device disconnect handler
     bigiot.disconnectAttack(disconnectCallback);
 
-    //Regist device connect hander
+    //Register device connect handler
     bigiot.connectAttack(connectCallback);
 
     // Login to bigiot.net
@@ -91,7 +91,7 @@ void loop()
         }
     }
 
-    //just uplaod once
+    //just upload once
     if (!isUpload) {
         isUpload = true;
         Serial.print("Send girl photo to platform");
@@ -103,7 +103,7 @@ void loop()
         uint8_t *image          array address
         size_t size  array      size
         */
-        if (!bigiot.uploadPhoto( picId, "jpg", "gril", (uint8_t *)girlArray, PIC_ARRAY_SIZE)) {
+        if (!bigiot.uploadPhoto( picId, "jpg", "girl", (uint8_t *)girlArray, PIC_ARRAY_SIZE)) {
             Serial.println("Upload error");
         } else
             Serial.println("Upload Success");

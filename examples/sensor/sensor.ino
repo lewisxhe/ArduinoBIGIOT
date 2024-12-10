@@ -70,13 +70,13 @@ void setup()
     //Initialize the DHT sensor
     dht.begin();
 
-    //Regist platform command event hander
+    //Register platform command event handler
     bigiot.eventAttach(eventCallback);
 
-    //Regist device disconnect hander
+    //Register device disconnect handler
     bigiot.disconnectAttack(disconnectCallback);
 
-    //Regist device connect hander
+    //Register device connect handler
     bigiot.connectAttack(connectCallback);
 
     // Login to bigiot.net

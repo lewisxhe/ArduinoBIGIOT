@@ -21,9 +21,9 @@ const char *usrkey = "your user key";           //platform user key , if you are
 WiFiClient client;
 BIGIOT bigiot(client);
 
-//中文 开灯 Uincode码
+//中文 开灯 Unicode 码
 #define TURN_ON     "u5f00u706f"
-//中文 关灯 Uincode码
+//中文 关灯 Unicode 码
 #define TURN_OFF    "u5173u706f"
 
 void eventCallback(const int devid, const int comid, const char *comstr, const char *slave)
@@ -37,7 +37,7 @@ void eventCallback(const int devid, const int comid, const char *comstr, const c
     case PLAY:
         digitalWrite(LED_PIN, LOW);
         break;
-    case OFFON:
+    case OFF_ON:
         break;
     case MINUS:
         break;
@@ -55,7 +55,7 @@ void eventCallback(const int devid, const int comid, const char *comstr, const c
         break;
     case DOWN:
         break;
-    case FPRWARD:
+    case FORWARD:
         break;
     case CUSTOM:
         // 当收到中文开灯时候将led输出低电平
@@ -100,13 +100,13 @@ void setup()
         while (1);
     }
 
-    //Regist platform command event hander
+    //Register platform command event handler
     bigiot.eventAttach(eventCallback);
 
-    //Regist device disconnect hander
+    //Register device disconnect handler
     bigiot.disconnectAttack(disconnectCallback);
 
-    //Regist device connect hander
+    //Register device connect handler
     bigiot.connectAttack(connectCallback);
 
     // Login to bigiot.net

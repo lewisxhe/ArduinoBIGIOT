@@ -11,7 +11,7 @@
 #if defined(ESP32)
 #include <WiFi.h>
 #include <HTTPClient.h>
-// #include <WiFiClientSecure.h>
+#include <WiFiClientSecure.h>
 #elif defined(ESP8266)
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
@@ -19,15 +19,15 @@
 #include <MD5Builder.h>
 #include <ArduinoJson.h>
 
-#define ARDUINOJSON_V5132   ((ARDUINOJSON_VERSION_MAJOR) == 5 && (ARDUINOJSON_VERSION_MINOR) == 13 && (ARDUINOJSON_VERSION_REVISION) == 2)
-#define ARDUINOJSON_V6113   ((ARDUINOJSON_VERSION_MAJOR) == 6 && (ARDUINOJSON_VERSION_MINOR) == 14 && (ARDUINOJSON_VERSION_REVISION) == 1)
+#define ARDUINOJSON_V513   ((ARDUINOJSON_VERSION_MAJOR) == 5 && (ARDUINOJSON_VERSION_MINOR) == 13)
+#define ARDUINOJSON_V611   ((ARDUINOJSON_VERSION_MAJOR) == 6 && (ARDUINOJSON_VERSION_MINOR) == 14)
 
-#if ARDUINOJSON_V6113
+#if ARDUINOJSON_V611
 StaticJsonDocument<1024> root;
-#elif ARDUINOJSON_V5132
+#elif ARDUINOJSON_V513
 StaticJsonBuffer<1024> jsonBuffer;
 #else
-#error "No support Arduinojson version ,please use ArduinoJsonV6.14.1 or ArduinoJsonV5.13.2"
+#error "No support ArduinoJson version ,please use ArduinoJsonV6.14.x or ArduinoJsonV5.13.x"
 #endif
 
 /////////////////////////////////////////////////////////////////
@@ -84,7 +84,7 @@ int BIGIOT::handle(void)
             _disconnectCallback(*this);
         }
         if (_reconnect && millis() - reconnectTimeStamp > REC_TIMEOUT) {
-            DEBUG_BIGIOTCIENT("RECONNECT :%s", _devName.c_str());
+            DEBUG_BIGIOT_CLIENT("RECONNECT :%s", _devName.c_str());
             reconnectTimeStamp = millis();
             loginToBigiot();
         }
@@ -95,17 +95,17 @@ int BIGIOT::handle(void)
 /////////////////////////////////////////////////////////////////
 int BIGIOT::packetParse(String pack)
 {
-    DEBUG_BIGIOTCIENT("%s", pack.c_str());
+    DEBUG_BIGIOT_CLIENT("%s", pack.c_str());
 
-#if ARDUINOJSON_V6113
+#if ARDUINOJSON_V611
     root.clear();
     DeserializationError error = deserializeJson(root, pack);
     if (error) {
-        DEBUG_BIGIOTCIENT("[%d] DeserializationError code:%d \n", __LINE__, error);
+        DEBUG_BIGIOT_CLIENT("[%d] DeserializationError code:%d \n", __LINE__, error);
         // Serial.println(pack);
         return 0;
     }
-#elif ARDUINOJSON_V5132
+#elif ARDUINOJSON_V513
     jsonBuffer.clear();
     JsonObject &root = jsonBuffer.parseObject(pack);
     if (!root.success()) {
@@ -132,7 +132,7 @@ int BIGIOT::packetParse(String pack)
     }
     /*else if (!strcmp(m, "checkout")) {
         const char *r = (const char *)root["IP"];
-        DEBUG_BIGIOTCIENT("RECV CHECKOUT:%s\n", r);
+        DEBUG_BIGIOT_CLIENT("RECV CHECKOUT:%s\n", r);
     }*/
     return 0;
 }
@@ -141,17 +141,17 @@ int BIGIOT::packetParse(String pack)
 int BIGIOT::loginParse(String pack)
 {
 
-#if ARDUINOJSON_V6113
+#if ARDUINOJSON_V611
     root.clear();
     DeserializationError error = deserializeJson(root, pack);
     if (error) {
-        DEBUG_BIGIOTCIENT("[%d] DeserializationError code:%d \n", __LINE__, error);
-        return INVALD;
+        DEBUG_BIGIOT_CLIENT("[%d] DeserializationError code:%d \n", __LINE__, error);
+        return INVALID;
     }
-#elif ARDUINOJSON_V5132
+#elif ARDUINOJSON_V513
     JsonObject &root = jsonBuffer.parseObject(pack);
     if (!root.success())
-        return INVALD;
+        return INVALID;
 #endif
 
     const char *m = (const char *)root["M"];
@@ -160,7 +160,7 @@ int BIGIOT::loginParse(String pack)
     } else if (!strcmp(m, "checkinok")) {
         _isCall = false;
         _devName = (const char *)root["NAME"];
-        DEBUG_BIGIOTCIENT("CHECKOK Device Name:%s\n", _devName.c_str());
+        DEBUG_BIGIOT_CLIENT("Checkin OK Device Name:%s\n", _devName.c_str());
         return BIGIOT_LOGINT_CHECK_IN;
     } else if (!strcmp(m, "token") && _usrKey.length()) {
         MD5Builder md5;
@@ -171,28 +171,28 @@ int BIGIOT::loginParse(String pack)
         _client->print(getLoginPacket(_token));
         return BIGIOT_LOGINT_TOKEN;
     }
-    return INVALD;
+    return INVALID;
 }
 
 /////////////////////////////////////////////////////////////////
 bool BIGIOT::loginToBigiot(void)
 {
     if (!_client->connect(_host.c_str(), _port)) {
-        DEBUG_BIGIOTCIENT("CONNECT HOST FAIL\n");
+        DEBUG_BIGIOT_CLIENT("CONNECT HOST FAIL\n");
         return false;
     }
     _client->print(getLoginPacket(_key));
     uint64_t timeStamp = millis();
     for (;;) {
         if (millis() - timeStamp > 5000) {
-            DEBUG_BIGIOTCIENT("LOGIN_TIMEOUT\n");
+            DEBUG_BIGIOT_CLIENT("LOGIN_TIMEOUT\n");
             _client->print(getLogoutPacket());
             _client->stop();
             return false;
         }
         if (_client->available()) {
             String line = _client->readStringUntil('\n');
-            DEBUG_BIGIOTCIENT("RECV:%s\n", line.c_str());
+            DEBUG_BIGIOT_CLIENT("RECV:%s\n", line.c_str());
             if (loginParse(line) == BIGIOT_LOGINT_CHECK_IN) {
                 _isLogin = true;
                 if (_connectCallback) {
@@ -227,19 +227,19 @@ bool BIGIOT::operator == (BIGIOT &b)
 
 /////////////////////////////////////////////////////////////////
 
-void BIGIOT::eventAttach(eventCallbackFunc f)
+void BIGIOT::eventAttach(EventCallbackFunc f)
 {
     _eventCallback = f;
 }
 
 /////////////////////////////////////////////////////////////////
-void BIGIOT::disconnectAttack(generlCallbackFunc f)
+void BIGIOT::disconnectAttack(GeneralCallbackFunc f)
 {
     _disconnectCallback = f;
 }
 
 /////////////////////////////////////////////////////////////////
-void BIGIOT::connectAttack(generlCallbackFunc f)
+void BIGIOT::connectAttack(GeneralCallbackFunc f)
 {
     _connectCallback = f;
 }
@@ -256,28 +256,28 @@ bool BIGIOT::checkOnline()
     checkTimeStamp = millis();
 
     String pack;
-#if ARDUINOJSON_V6113
+#if ARDUINOJSON_V611
     root.clear();
-#elif ARDUINOJSON_V5132
+#elif ARDUINOJSON_V513
     jsonBuffer.clear();
     JsonObject &root = jsonBuffer.createObject();
 #endif
     root["M"] = "isOL";
-#if ARDUINOJSON_V6113
+#if ARDUINOJSON_V611
     JsonArray v = root.createNestedArray("ID");
-#elif ARDUINOJSON_V5132
+#elif ARDUINOJSON_V513
     JsonArray &v = root.createNestedArray("ID");
 #endif
 
     v.add("D" + _dev);
 
-#if ARDUINOJSON_V6113
+#if ARDUINOJSON_V611
     serializeJson(root, pack);
-#elif ARDUINOJSON_V5132
+#elif ARDUINOJSON_V513
     root.printTo(pack);
 #endif
     pack += "\n";
-    DEBUG_BIGIOTCIENT("SEND CHECK ONLINE COMMAND:%s", pack.c_str());
+    DEBUG_BIGIOT_CLIENT("SEND CHECK ONLINE COMMAND:%s", pack.c_str());
 
     _client->print(pack);
 
@@ -288,32 +288,32 @@ bool BIGIOT::checkOnline()
             while (_client->available()) {
                 pack = _client->readStringUntil('\n');
                 // Serial.println(pack);
-#if ARDUINOJSON_V6113
+#if ARDUINOJSON_V611
                 root.clear();
                 DeserializationError error = deserializeJson(root, pack);
                 if (error) {
-                    DEBUG_BIGIOTCIENT("[%d] DeserializationError code:%d \n", __LINE__, error);
+                    DEBUG_BIGIOT_CLIENT("[%d] DeserializationError code:%d \n", __LINE__, error);
                     return false;
                 }
-#elif ARDUINOJSON_V5132
+#elif ARDUINOJSON_V513
                 JsonObject &root = jsonBuffer.parseObject(pack);
                 if (!root.success())
                     return false;
 #endif
                 String id = "D" + _dev;
                 if (root["R"][id] == String("1")) {
-                    DEBUG_BIGIOTCIENT("is Online ...");
+                    DEBUG_BIGIOT_CLIENT("is Online ...");
                     return true;
                 }
-                DEBUG_BIGIOTCIENT("is No Online ...");
+                DEBUG_BIGIOT_CLIENT("is No Online ...");
                 _client->stop();
                 _isLogin = false;
                 return false;
             }
             if (millis() - start > 5000) {
-                DEBUG_BIGIOTCIENT("[Timeout] is No Online ...\n");
+                DEBUG_BIGIOT_CLIENT("[Timeout] is No Online ...\n");
                 if (_client->connected()) {
-                    Serial.println("Cilent is connect ...\n");
+                    Serial.println("Client is connect ...\n");
                 }
                 _client->stop();
                 _isLogin = false;
@@ -328,9 +328,9 @@ bool BIGIOT::checkOnline()
 String BIGIOT::getLoginPacket(String apiKey)
 {
     String pack;
-#if ARDUINOJSON_V6113
+#if ARDUINOJSON_V611
     root.clear();
-#elif ARDUINOJSON_V5132
+#elif ARDUINOJSON_V513
     jsonBuffer.clear();
     JsonObject &root = jsonBuffer.createObject();
 #endif
@@ -338,13 +338,13 @@ String BIGIOT::getLoginPacket(String apiKey)
     root["ID"] = _dev;
     root["K"] = apiKey;
 
-#if ARDUINOJSON_V6113
+#if ARDUINOJSON_V611
     serializeJson(root, pack);
-#elif ARDUINOJSON_V5132
+#elif ARDUINOJSON_V513
     root.printTo(pack);
 #endif
     pack += "\n";
-    DEBUG_BIGIOTCIENT("SEND LOGIN COMMAND:%s", pack.c_str());
+    DEBUG_BIGIOT_CLIENT("SEND LOGIN COMMAND:%s", pack.c_str());
     return pack;
 }
 
@@ -353,9 +353,9 @@ String BIGIOT::getLogoutPacket(void)
 {
     String pack;
 
-#if ARDUINOJSON_V6113
+#if ARDUINOJSON_V611
     root.clear();
-#elif ARDUINOJSON_V5132
+#elif ARDUINOJSON_V513
     jsonBuffer.clear();
     JsonObject &root = jsonBuffer.createObject();
 #endif
@@ -366,13 +366,13 @@ String BIGIOT::getLogoutPacket(void)
         root["K"] = _token;
     else
         root["K"] = _key;
-#if ARDUINOJSON_V6113
+#if ARDUINOJSON_V611
     serializeJson(root, pack);
-#elif ARDUINOJSON_V5132
+#elif ARDUINOJSON_V513
     root.printTo(pack);
 #endif
     pack   += "\n";
-    DEBUG_BIGIOTCIENT("SEND CHECKOUT COMMAND:%s", pack.c_str());
+    DEBUG_BIGIOT_CLIENT("SEND CHECKOUT COMMAND:%s", pack.c_str());
     return pack;
 }
 
@@ -395,9 +395,9 @@ bool BIGIOT::sendAlarm(const char *method, const char *message)
     if (!strcmp(method, "email") ||
             !strcmp(method, "qq") ||
             !strcmp(method, "weibo")) {
-#if ARDUINOJSON_V6113
+#if ARDUINOJSON_V611
         root.clear();
-#elif ARDUINOJSON_V5132
+#elif ARDUINOJSON_V513
         jsonBuffer.clear();
         JsonObject &root = jsonBuffer.createObject();
 #endif
@@ -409,14 +409,14 @@ bool BIGIOT::sendAlarm(const char *method, const char *message)
         root["B"] = method;
         String json;
 
-#if ARDUINOJSON_V6113
+#if ARDUINOJSON_V611
         serializeJson(root, json);
-#elif ARDUINOJSON_V5132
+#elif ARDUINOJSON_V513
         root.printTo(json);
 #endif
         json += "\n";
         _client->print(json);
-        DEBUG_BIGIOTCIENT("Send:%s", json);
+        DEBUG_BIGIOT_CLIENT("Send:%s", json);
         last_send_time = millis();
         return true;
     }
@@ -440,14 +440,14 @@ bool BIGIOT::uploadPhoto( const char *id, const char *type, const char *filename
             strcmp(type, "jpg")  &&
             strcmp(type, "png")  &&
             strcmp(type, "gif")) {
-        DEBUG_BIGIOTCIENT("Error data type\n");
+        DEBUG_BIGIOT_CLIENT("Error data type\n");
         return false;
     }
 
     WiFiClientSecure client;
 
     if (!client.connect(BIGIOT_PLATFORM_HOST, BIGIOT_PLATFORM_HTTPS_PORT)) {
-        DEBUG_BIGIOTCIENT("Connection failed");
+        DEBUG_BIGIOT_CLIENT("Connection failed");
         return false;
     }
     const char *request_content = "--------------------------ef73a32d43e7f04d\r\n"
@@ -478,7 +478,7 @@ bool BIGIOT::uploadPhoto( const char *id, const char *type, const char *filename
     client.println(request);
     client.readBytesUntil('\r', status, sizeof(status));
     if (strcmp(status, "HTTP/1.1 100 Continue") != 0) {
-        DEBUG_BIGIOTCIENT("Unexpected response: %s\n", status);
+        DEBUG_BIGIOT_CLIENT("Unexpected response: %s\n", status);
         client.stop();
         return false;
     }
@@ -501,13 +501,13 @@ bool BIGIOT::uploadPhoto( const char *id, const char *type, const char *filename
     bzero(status, sizeof(status));
     client.readBytesUntil('\r', status, sizeof(status));
     if (strncmp(status, "HTTP/1.1 200 OK", strlen("HTTP/1.1 200 OK"))) {
-        DEBUG_BIGIOTCIENT("Unexpected response: %s\n", status);
+        DEBUG_BIGIOT_CLIENT("Unexpected response: %s\n", status);
         client.stop();
         return false;
     }
 
     if (!client.find("\r\n\r\n")) {
-        DEBUG_BIGIOTCIENT("Invalid response\n");
+        DEBUG_BIGIOT_CLIENT("Invalid response\n");
         client.stop();
         return false;
     }
@@ -521,14 +521,14 @@ bool BIGIOT::uploadPhoto( const char *id, const char *type, const char *filename
     }
     char *start = strchr(str, '{');
 
-#if ARDUINOJSON_V6113
+#if ARDUINOJSON_V611
     root.clear();
     DeserializationError error = deserializeJson(root, start);
     if (error) {
         free(str);
         return false;
     }
-#elif ARDUINOJSON_V5132
+#elif ARDUINOJSON_V513
     jsonBuffer.clear();
     JsonObject &root = jsonBuffer.parseObject(start);
     if (!root.success()) {
@@ -559,9 +559,9 @@ bool BIGIOT::upload(const char *id[], const char *data[], int len)
 {
     if (!_isLogin || !data || !len)return false;
 
-#if ARDUINOJSON_V6113
+#if ARDUINOJSON_V611
     root.clear();
-#elif ARDUINOJSON_V5132
+#elif ARDUINOJSON_V513
     jsonBuffer.clear();
     JsonObject &root = jsonBuffer.createObject();
 #endif
@@ -569,9 +569,9 @@ bool BIGIOT::upload(const char *id[], const char *data[], int len)
     root["M"] = "update";
     root["ID"] = _dev;
 
-#if ARDUINOJSON_V6113
+#if ARDUINOJSON_V611
     JsonObject v = root.createNestedObject("V");
-#elif ARDUINOJSON_V5132
+#elif ARDUINOJSON_V513
     JsonObject &v = root.createNestedObject("V");
 #endif
     for (int i = 0; i < len; ++i) {
@@ -579,51 +579,51 @@ bool BIGIOT::upload(const char *id[], const char *data[], int len)
     }
     String json;
 
-#if ARDUINOJSON_V6113
+#if ARDUINOJSON_V611
     serializeJson(root, json);
-#elif ARDUINOJSON_V5132
+#elif ARDUINOJSON_V513
     root.printTo(json);
 #endif
     json += "\n";
     _client->print(json);
-    DEBUG_BIGIOTCIENT("Send:%s", json);
+    DEBUG_BIGIOT_CLIENT("Send:%s", json);
     return true;
 }
 
 /////////////////////////////////////////////////////////////////
-bool loaction(String id, String longitude, String latitude)
+bool location(String id, String longitude, String latitude)
 {
-    return loaction(id.c_str(), longitude.c_str(), latitude.c_str());
+    return location(id.c_str(), longitude.c_str(), latitude.c_str());
 }
 
 /////////////////////////////////////////////////////////////////
-bool BIGIOT::loaction(const char *id, float longitude, float latitude)
+bool BIGIOT::location(const char *id, float longitude, float latitude)
 {
     char longitudeBf[16], latitudeBf[16];
     if (!id)return false;
     snprintf(longitudeBf, sizeof(longitudeBf), "%f", longitude);
     snprintf(latitudeBf, sizeof(latitudeBf), "%f", latitude);
-    return loaction(id, longitudeBf, latitudeBf);
+    return location(id, longitudeBf, latitudeBf);
 }
 
 /////////////////////////////////////////////////////////////////
-bool BIGIOT::loaction(const char *id, const char *longitude, const char *latitude)
+bool BIGIOT::location(const char *id, const char *longitude, const char *latitude)
 {
     char buff[128];
     if (!_isLogin)return false;
 
-#if ARDUINOJSON_V6113
+#if ARDUINOJSON_V611
     root.clear();
-#elif ARDUINOJSON_V5132
+#elif ARDUINOJSON_V513
     jsonBuffer.clear();
     JsonObject &root = jsonBuffer.createObject();
 #endif
     root["M"] = "update";
     root["ID"] = _dev;
 
-#if ARDUINOJSON_V6113
+#if ARDUINOJSON_V611
     JsonObject v = root.createNestedObject("V");
-#elif ARDUINOJSON_V5132
+#elif ARDUINOJSON_V513
     JsonObject &v = root.createNestedObject("V");
 #endif
 
@@ -631,38 +631,38 @@ bool BIGIOT::loaction(const char *id, const char *longitude, const char *latitud
     v[id] = buff;
     String json;
 
-#if ARDUINOJSON_V6113
+#if ARDUINOJSON_V611
     serializeJson(root, json);
-#elif ARDUINOJSON_V5132
+#elif ARDUINOJSON_V513
     root.printTo(json);
 #endif
     json += "\n";
     _client->print(json);
-    DEBUG_BIGIOTCIENT("Send:%s", json);
+    DEBUG_BIGIOT_CLIENT("Send:%s", json);
     return true;
 }
 
 /////////////////////////////////////////////////////////////////
-// xEamil::xEamil(Client &client)
+// xEmail::xEmail(Client &client)
 // {
 //     _client = &client;
 // }
 
 /////////////////////////////////////////////////////////////////
-void xEamil::setEmailHost(const char *host, uint16_t port)
+void xEmail::setEmailHost(const char *host, uint16_t port)
 {
     _emailHost = host;
     _emailPort = port;
 }
 
 /////////////////////////////////////////////////////////////////
-void xEamil::setRecipient(const char *email)
+void xEmail::setRecipient(const char *email)
 {
     _recipient = email;
 }
 
 /////////////////////////////////////////////////////////////////
-bool xEamil::setSender(const char *user, const char *password)
+bool xEmail::setSender(const char *user, const char *password)
 {
     _emailUser = user;
     _emailPasswd = password;
@@ -676,7 +676,7 @@ bool xEamil::setSender(const char *user, const char *password)
 }
 
 /////////////////////////////////////////////////////////////////
-bool xEamil::sendEmail(const char *subject, const char *content)
+bool xEmail::sendEmail(const char *subject, const char *content)
 {
     String ip = WiFiClient::localIP().toString();
     struct {
@@ -709,16 +709,16 @@ bool xEamil::sendEmail(const char *subject, const char *content)
     for (int i = 0; i < PLATFORM_ARRAY_SIZE(stream); ++i) {
         switch (stream[i].cnt) {
         case 0:
-            DEBUG_BIGIOTCIENT("%s\n", stream[i].prefix);
+            DEBUG_BIGIOT_CLIENT("%s\n", stream[i].prefix);
             println(stream[i].prefix);
             break;
         case 1:
             snprintf(buff, sizeof(buff), stream[i].prefix, stream[i].arg);
-            DEBUG_BIGIOTCIENT("%s\n", buff);
+            DEBUG_BIGIOT_CLIENT("%s\n", buff);
             println(buff);
             break;
         case 2:
-            DEBUG_BIGIOTCIENT("%s\n", stream[i].arg);
+            DEBUG_BIGIOT_CLIENT("%s\n", stream[i].arg);
             println(stream[i].arg);
             break;
         }
@@ -732,13 +732,13 @@ bool xEamil::sendEmail(const char *subject, const char *content)
 }
 
 /////////////////////////////////////////////////////////////////
-bool xEamil::sendEmail(String &subject, String &content)
+bool xEmail::sendEmail(String &subject, String &content)
 {
     return sendEmail(subject.c_str(), content.c_str());
 }
 
 /////////////////////////////////////////////////////////////////
-bool xEamil::emailRecv()
+bool xEmail::emailRecv()
 {
     uint8_t code;
     int loopCount = 0;
@@ -747,7 +747,7 @@ bool xEamil::emailRecv()
         loopCount++;
         if (loopCount > 10000) {
             stop();
-            DEBUG_BIGIOTCIENT("\r\nxEamil Timeout\n");
+            DEBUG_BIGIOT_CLIENT("\r\nxEamil Timeout\n");
             return 0;
         }
     }
@@ -764,20 +764,20 @@ bool xEamil::emailRecv()
 }
 
 /////////////////////////////////////////////////////////////////
-void xEamil::emailFail()
+void xEmail::emailFail()
 {
     int loopCount = 0;
     println(F("QUIT"));
     while (!available()) {
         delay(1);
         loopCount++;
-        if (loopCount > XEMAIL_RECV_TIMEOUT) {
+        if (loopCount > EMAIL_RECV_TIMEOUT) {
             stop();
-            DEBUG_BIGIOTCIENT("\r\nxEamil Timeout\n");
+            DEBUG_BIGIOT_CLIENT("\r\nxEmail Timeout\n");
             return;
         }
     }
-    DEBUG_BIGIOTCIENT("MailRecv:");
+    DEBUG_BIGIOT_CLIENT("MailRecv:");
     while (available()) {
         DEBUG_BIGIOT_WRITE(read());
     }
@@ -825,7 +825,7 @@ bool ServerChan::sendWechat(const char *text, const char *desp)
             *p = '+';
     }
 
-    DEBUG_BIGIOTCIENT("ServerChan Request:%s", buff);
+    DEBUG_BIGIOT_CLIENT("ServerChan Request:%s", buff);
 
     HTTPClient http;
 #if defined(ESP32)
@@ -835,7 +835,7 @@ bool ServerChan::sendWechat(const char *text, const char *desp)
     http.begin(client, String(buff));
 #endif
     int err = http.GET();
-    DEBUG_BIGIOTCIENT("[HTTP] GET.code: %d\n", err);
+    DEBUG_BIGIOT_CLIENT("[HTTP] GET.code: %d\n", err);
     http.end();
     free(buff);
     return err == HTTP_CODE_OK;

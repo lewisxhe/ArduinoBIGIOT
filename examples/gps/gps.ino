@@ -65,13 +65,13 @@ void setup()
         while (1);
     }
 
-    //Regist platform command event hander
+    //Register platform command event handler
     bigiot.eventAttach(eventCallback);
 
-    //Regist device disconnect hander
+    //Register device disconnect handler
     bigiot.disconnectAttack(disconnectCallback);
 
-    //Regist device connect hander
+    //Register device connect handler
     bigiot.connectAttack(connectCallback);
 
     // Login to bigiot.net
@@ -103,7 +103,7 @@ void loop()
     //Upload targeting data every 10 seconds
     if (gps.location.isValid() && millis() - last_upload_time > STREAM_UPLOAD_TIMEOUT) {
         last_upload_time = millis();
-        bigiot.loaction(BIGIOT_LOACTION_STREAM_ID, gps.location.lng(), gps.location.lat());
+        bigiot.location(BIGIOT_LOACTION_STREAM_ID, gps.location.lng(), gps.location.lat());
     }
 
     while (Serial1.available())

@@ -11,10 +11,10 @@
 #include "WiFiClient.h"
 
 #ifdef DEBUG_BIGIOT_PORT
-#define DEBUG_BIGIOTCIENT(fmt, ...)               DEBUG_BIGIOT_PORT.printf_P( (PGM_P)PSTR(fmt), ## __VA_ARGS__ )
+#define DEBUG_BIGIOT_CLIENT(fmt, ...)               DEBUG_BIGIOT_PORT.printf_P( (PGM_P)PSTR(fmt), ## __VA_ARGS__ )
 #define DEBUG_BIGIOT_WRITE(x)                     DEBUG_BIGIOT_PORT.write(x)
 #else
-#define DEBUG_BIGIOTCIENT(...)
+#define DEBUG_BIGIOT_CLIENT(...)
 #define DEBUG_BIGIOT_WRITE(x)
 #endif
 
@@ -24,10 +24,10 @@
 #define BIGIOT_LOGINT_WELCOME                     1
 #define BIGIOT_LOGINT_CHECK_IN                    2
 #define BIGIOT_LOGINT_TOKEN                       3
-#define BIGIOT_PLATFROM_COMMAND_TOTAL             12
+#define BIGIOT_PLATFORM_COMMAND_TOTAL             12
 #define REC_TIMEOUT                               10000
 #define BIGIOT_PLATFORM_ALARM_INTERVAL            600000
-#define BIGIOT_PLATFROM_COMMAND_TABLE             {"play", "stop", "offOn", "minus", "up", "plus", "left", "pause", "right", "backward", "down", "forward"} ;
+#define BIGIOT_PLATFORM_COMMAND_TABLE             {"play", "stop", "offOn", "minus", "up", "plus", "left", "pause", "right", "backward", "down", "forward"} ;
 #define BIGIOT_PLATFORM_8282_HATERATE_PACK        ("{\"M\":\"b\"}\n")
 #define BIGIOT_PLATFORM_8383_HATERATE_PACK        ("{\"M\":\"ping\"}")
 #define BIGIOT_PLATFORM_WEBSOCKET_HATERATE_PACK   ("{\"M\":\"beat\"}\n")
@@ -35,17 +35,17 @@
 #define SERVERCHAN_LINK_FORMAT                    "http://sc.ftqq.com/%s.send?text=%s"
 #define SERVERCHAN_DESP_MAX_LENGTH                65536
 
-#define XEMAIL_RECV_TIMEOUT                       10000
+#define EMAIL_RECV_TIMEOUT                       10000
 
 #define PLATFORM_ARRAY_SIZE(x)                    (sizeof(x)/sizeof(x[0]))
 
 
 enum {
-    INVALD = -2,
+    INVALID = -2,
     DISCONNECT = -1,
     PLAY = 0,
     STOP,
-    OFFON,
+    OFF_ON,
     MINUS,
     UP,
     PLUS,
@@ -54,15 +54,15 @@ enum {
     RIGHT,
     BACKWARD,
     DOWN,
-    FPRWARD,
+    FORWARD,
     CUSTOM,
 };
 
 
-class xEamil : public WiFiClient
+class xEmail : public WiFiClient
 {
 public:
-    // xEamil(Client &client);
+    // xEmail(Client &client);
     void setEmailHost(const char *host, uint16_t port);
     bool setSender(const char *user, const char *password);
     void setRecipient(const char *email);
@@ -97,12 +97,12 @@ class BIGIOT
 {
 public:
     BIGIOT(Client &client);
-    typedef void (*eventCallbackFunc)(const int id, const int c, const char *command, const char *salve);
-    typedef void (*generlCallbackFunc)(BIGIOT &);
+    typedef void (*EventCallbackFunc)(const int id, const int c, const char *command, const char *salve);
+    typedef void (*GeneralCallbackFunc)(BIGIOT &);
 
-    void connectAttack(generlCallbackFunc f),
-         disconnectAttack(generlCallbackFunc f),
-         eventAttach(eventCallbackFunc f);
+    void connectAttack(GeneralCallbackFunc f),
+         disconnectAttack(GeneralCallbackFunc f),
+         eventAttach(EventCallbackFunc f);
 
     int handle(void);
 
@@ -112,9 +112,9 @@ public:
          upload(const char *id[], const char *data[], int len),
          upload(String id, String data),
 
-         loaction(const char *id, const char *longitude, const char *latitude),
-         loaction(const char *id, float longitude, float latitude),
-         loaction(String id, String longitude, String latitude),
+         location(const char *id, const char *longitude, const char *latitude),
+         location(const char *id, float longitude, float latitude),
+         location(String id, String longitude, String latitude),
 
          uploadPhoto( const char *id, const char *type, const char *filename,  uint8_t *image, size_t size),
 
@@ -137,7 +137,7 @@ private:
     String getLoginPacket(String apiKey),
            getLogoutPacket();
 
-    const char *platform_command[BIGIOT_PLATFROM_COMMAND_TOTAL] = BIGIOT_PLATFROM_COMMAND_TABLE;
+    const char *platform_command[BIGIOT_PLATFORM_COMMAND_TOTAL] = BIGIOT_PLATFORM_COMMAND_TABLE;
 
 protected:
     uint16_t _port;
@@ -150,9 +150,9 @@ protected:
            _devName;
     Client *_client;
     bool _reconnect, _isLogin, _isCall;
-    eventCallbackFunc _eventCallback = NULL;
-    generlCallbackFunc _disconnectCallback = NULL;
-    generlCallbackFunc _connectCallback = NULL;
+    EventCallbackFunc _eventCallback = NULL;
+    GeneralCallbackFunc _disconnectCallback = NULL;
+    GeneralCallbackFunc _connectCallback = NULL;
 };
 
 
